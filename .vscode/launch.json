@@ -12,9 +12,10 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            //uncomment MIMode in linux and Macos that below catalina
+            //uncomment MIMode if you are using linux and Macos before catalina
             //"MIMode": "gdb",
             //for Macos catalina, you need to use old version lldb-mi
+            //if you are not using this version of Macos, comment miDebuggerPath 
             "miDebuggerPath": "/Applications/Xcode-10.2.app/Contents/Developer/usr/bin/lldb-mi",
             "preLaunchTask": "build"
         }
