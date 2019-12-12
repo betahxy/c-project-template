@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/main",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            //uncomment MIMode in linux and Macos that below catalina
+            //"MIMode": "gdb",
+            //for Macos catalina, you need to use old version lldb-mi
+            "miDebuggerPath": "/Applications/Xcode-10.2.app/Contents/Developer/usr/bin/lldb-mi",
+            "preLaunchTask": "build"
+        }
+    ]
+}
