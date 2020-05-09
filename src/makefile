@@ -1,62 +1,73 @@
-CC := 
+# Author:betahxy
+# This is a template makefile for a c project
+# Usually you just to copy this one into a sub folder if you need to compile sub folders
+# Please you need to add that sub folder name in $(SUB_DIR), you need to control your own folder hierarchy
+MAKE=make
+
+CC := gcc
 LD :=
+
 PWD := $(shell pwd)
 INCLUDE_DIR := -I$(PWD)/include/
+
 CFLAGS := $(INCLUDE_DIR) -Wall -g
+
+# Where all objects will be put, this directory is created automatically by makefile
 BUILD_DIR:= $(PWD)/build/
 
+# Your sub folder list, separated by space 
 SUB_DIR := 
-SUB_DIR_CLEAN := $(SUB_DIR:%=%_clean)
+# Clean command of each sub folder
+SUB_DIR_CLEAN := $(patsubst %, %_clean,$(SUB_DIR))
 SRC_DIR := .
+
+# Source files in a folder, not including files of sub folders
 ALL_SRC := $(wildcard *.c)
 ALL_OBJ := $(ALL_SRC:%.c=$(BUILD_DIR)%.o)
 ALL_DEP := $(ALL_SRC:%.c=%.d)
+
+# Link target
 TARGET := main
+# Sub folders need to know some variables, those variables will override the same variables in sub folders
 export  CC INCLUDE_DIR CFLAGS BUILD_DIR
-.PHONY: all clean clean_build clean_all print subdirs \
+
+.PHONY: all clean clean_build clean_all print \
 		subdirs_clean $(SUB_DIR) $(SUB_DIR_CLEAN)
 
-$(TARGET):all 
+sinclude $(ALL_DEP)
+
+$(TARGET):all
+	$(info [LD] Linking target:$@)
 	@set -e;\
-	echo "linking target...";\
-	$(CC) -o $(BUILD_DIR)$(TARGET) $(shell find $(BUILD_DIR) -name "*.o");\
+	$(CC) -o $(BUILD_DIR)$(TARGET) $(shell find $(BUILD_DIR) -name "*.o");
 
-all: subdirs $(ALL_DEP) $(ALL_OBJ)
+all: $(BUILD_DIR) $(BUILD_DIR) $(SUB_DIR) $(ALL_OBJ) 
 
-subdirs: $(SUB_DIR)
 
+# If a build folder doesn't exist, create one first
+$(BUILD_DIR):
+	$(info Build directory does not exist, creating...)
+	@mkdir -p $(BUILD_DIR)
+
+# Need to make each sub foloder
 $(SUB_DIR):
+	$(info [Make] Making folder [$@])
 	@set -e;\
-	echo "building folder [$@]";\
-	make -e -C $@ all
+	$(MAKE) -e -C $@ all
 
-print:
-	@echo $(ALL_SRC)
-	@echo $(ALL_OBJ)
-	@echo $(ALL_DEP)
-	@echo $(CC)
-	@echo $(BUILD_DIR)
-	@echo $(INCLUDE_DIR)
-%.d:%.c
-	@set -e;\
-	$(CC) $(INCLUDE_DIR) -E -MM $< > $@.$$$$;\
-	sed 's,\($*\)\.o[ :]*,$(BUILD_DIR)\1.o $@ : ,g' < $@.$$$$ > $@; \
-	rm -f $@.$$$$
-
+# We need to add prefix $(BUILD_DIR) to specify the imp
 $(BUILD_DIR)%.o:%.c
-	@echo "Compiling $@... ";\
-	$(CC) $(CFLAGS) $< -c -o $@
+	$(info [CC] Compiling object: $@...)
+	@$(CC) $(INCLUDE_DIR) -MM -MP -MT $@ -MF $(patsubst %.c,%.d,$<) $<
+	@$(CC) $(CFLAGS) $< -c -o $@
 
--include $(ALL_DEP)
-
-clean: subdirs_clean
-	rm -f *.d*;\
-	rm -f *.o;\
-
-subdirs_clean:$(SUB_DIR_CLEAN)
+# When cleaning, first clean each sub folders
+clean: $(SUB_DIR_CLEAN)
+	@set -e;\
+	rm -rf *.d*;\
+	rm -ff *.o;\
+	rm -rf $(BUILD_DIR)
 
 $(SUB_DIR_CLEAN):
-	@make clean -e -C $(@:%_clean=%)
-clean_build:
-	rm -f $(BUILD_DIR)*.o $(BUILD_DIR)$(TARGET)
-clean_all:clean_build clean
+	$(info [CLEAN] Cleaning folder $(patsubst %_clean,%,$@)...)
+	@$(MAKE) clean -e -C $(patsubst %_clean,%,$@)
