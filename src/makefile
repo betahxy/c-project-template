@@ -22,9 +22,9 @@ SUB_DIR_CLEAN := $(patsubst %, %_clean,$(SUB_DIR))
 SRC_DIR := .
 
 # Source files in a folder, not including files of sub folders
-ALL_SRC := $(wildcard *.c)
-ALL_OBJ := $(ALL_SRC:%.c=$(BUILD_DIR)%.o)
-ALL_DEP := $(ALL_SRC:%.c=%.d)
+SRCS := $(wildcard *.c)
+OBJS := $(SRCS:%.c=$(BUILD_DIR)%.o)
+DEPS := $(SRCS:%.c=%.d)
 
 # Link target
 TARGET := main
@@ -34,15 +34,14 @@ export  CC INCLUDE_DIR CFLAGS BUILD_DIR
 .PHONY: all clean clean_build clean_all print \
 		subdirs_clean $(SUB_DIR) $(SUB_DIR_CLEAN)
 
-sinclude $(ALL_DEP)
+sinclude $(DEPS)
 
 $(TARGET):all
 	$(info [LD] Linking target:$@)
 	@set -e;\
 	$(CC) -o $(BUILD_DIR)$(TARGET) $(shell find $(BUILD_DIR) -name "*.o");
 
-all: $(BUILD_DIR) $(BUILD_DIR) $(SUB_DIR) $(ALL_OBJ) 
-
+all: $(BUILD_DIR) $(BUILD_DIR) $(SUB_DIR) $(OBJS) 
 
 # If a build folder doesn't exist, create one first
 $(BUILD_DIR):
@@ -64,8 +63,8 @@ $(BUILD_DIR)%.o:%.c
 # When cleaning, first clean each sub folders
 clean: $(SUB_DIR_CLEAN)
 	@set -e;\
-	rm -rf *.d*;\
-	rm -ff *.o;\
+	rm -f *.d*;\
+	rm -f *.o;\
 	rm -rf $(BUILD_DIR)
 
 $(SUB_DIR_CLEAN):
